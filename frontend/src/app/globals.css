@@ -1,0 +1,198 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+
+  /* FinYX Custom Brand Palette Variables */
+  --color-finyx-navy: #071B5C;
+  --color-finyx-royal: #0B63F6;
+  --color-finyx-electric: #1769FF;
+  --color-finyx-cyan: #12D9FF;
+
+  /* UI Color Tokens */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Radii mapping (12-16px range for cards/surfaces) */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* Brand Typography */
+  --font-sans: "Inter", "Manrope", system-ui, -apple-system, sans-serif;
+
+  /* FinYX Palette mapped into OKLCH */
+  --background: oklch(0.985 0.006 255);        /* #F6F9FF */
+  --foreground: oklch(0.145 0.03 255);        /* #0B1220 */
+  
+  --card: oklch(1 0 0);                       /* #FFFFFF */
+  --card-foreground: oklch(0.145 0.03 255);   /* #0B1220 */
+  
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0.03 255);
+  
+  --primary: oklch(0.488 0.243 264.376);      /* Royal Blue #0B63F6 */
+  --primary-foreground: oklch(0.985 0 0);
+  
+  --secondary: oklch(0.96 0.01 255);          /* Soft Slate Tint */
+  --secondary-foreground: oklch(0.205 0.08 265);
+  
+  --muted: oklch(0.96 0.01 255);
+  --muted-foreground: oklch(0.52 0.03 255);   /* Secondary Text #64748B */
+  
+  --accent: oklch(0.94 0.03 240);             /* Light Cyan/Blue Accent Tint */
+  --accent-foreground: oklch(0.205 0.08 265);
+  
+  --destructive: oklch(0.577 0.245 27.325);   /* Danger #EF4444 */
+  --border: oklch(0.925 0.01 255);            /* #E2E8F0 */
+  --input: oklch(0.925 0.01 255);
+  --ring: oklch(0.55 0.20 255);               /* Soft Royal Ring */
+
+  /* Data Visualization Colors mapped to FinYX Brand Palette */
+  --chart-1: oklch(0.22 0.09 265);            /* Navy #071B5C */
+  --chart-2: oklch(0.488 0.243 264.376);      /* Royal Blue #0B63F6 */
+  --chart-3: oklch(0.55 0.23 255);            /* Electric Blue #1769FF */
+  --chart-4: oklch(0.80 0.16 210);            /* Cyan Accent #12D9FF */
+  --chart-5: oklch(0.60 0.18 145);            /* Success Green #16A34A */
+
+  --radius: 0.875rem;                          /* 14px modern soft radius */
+
+  /* Sidebar Tokens */
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.145 0.03 255);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.96 0.01 255);
+  --sidebar-accent-foreground: oklch(0.205 0.08 265);
+  --sidebar-border: oklch(0.925 0.01 255);
+  --sidebar-ring: oklch(0.55 0.20 255);
+
+  /* FinYX Custom Financial Shadows */
+  --shadow-fin-sm: 0 1px 2px 0 rgb(7 27 92 / 0.04);
+  --shadow-fin-md: 0 4px 16px -2px rgb(7 27 92 / 0.06), 0 2px 4px -2px rgb(7 27 92 / 0.02);
+  --shadow-fin-lg: 0 12px 32px -4px rgb(7 27 92 / 0.08), 0 4px 8px -2px rgb(7 27 92 / 0.03);
+}
+
+.dark {
+  --background: oklch(0.12 0.03 265);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.16 0.03 265);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.16 0.03 265);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.55 0.23 255);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.22 0.04 265);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.22 0.04 265);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.22 0.04 265);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.55 0.20 255);
+  
+  --chart-1: oklch(0.80 0.16 210);
+  --chart-2: oklch(0.55 0.23 255);
+  --chart-3: oklch(0.488 0.243 264.376);
+  --chart-4: oklch(0.40 0.15 265);
+  --chart-5: oklch(0.65 0.20 145);
+  
+  --sidebar: oklch(0.16 0.03 265);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.22 0.04 265);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.55 0.20 255);
+
+  --shadow-fin-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-fin-md: 0 4px 16px -2px rgb(0 0 0 / 0.4);
+  --shadow-fin-lg: 0 12px 32px -4px rgb(0 0 0 / 0.5);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+  
+  html {
+    @apply font-sans antialiased scroll-smooth;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  body {
+    @apply bg-background text-foreground min-h-screen selection:bg-[#0B63F6]/15 selection:text-[#0B63F6];
+  }
+
+  /* Financial Number Scannability */
+  .font-numeric {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+}
+
+@layer utilities {
+  /* Brand Gradient Utility */
+  .bg-finyx-gradient {
+    background: linear-gradient(135deg, #071B5C 0%, #0B63F6 60%, #12D9FF 100%);
+  }
+
+  .bg-finyx-accent-gradient {
+    background: linear-gradient(135deg, #0B63F6 0%, #1769FF 50%, #12D9FF 100%);
+  }
+
+  /* Subtle Card Shadows */
+  .shadow-fin-card {
+    box-shadow: var(--shadow-fin-md);
+  }
+
+  .shadow-fin-floating {
+    box-shadow: var(--shadow-fin-lg);
+  }
+}
