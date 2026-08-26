@@ -216,7 +216,7 @@ export default function AnalyticsReport({ data }: AnalyticsReportProps) {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => [formatCurrency(value), "Amount"]}
+                  formatter={(value: any) => [formatCurrency(Number(value || 0)), "Amount"]}
                   contentStyle={{
                     backgroundColor: "var(--card)",
                     borderColor: "var(--border)",
@@ -268,7 +268,7 @@ export default function AnalyticsReport({ data }: AnalyticsReportProps) {
                   width={100}
                 />
                 <Tooltip
-                  formatter={(value: number) => [formatCurrency(value), "Spent"]}
+                  formatter={(value: any) => [formatCurrency(Number(value || 0)), "Spent"]}
                   contentStyle={{
                     backgroundColor: "var(--card)",
                     borderColor: "var(--border)",
@@ -471,7 +471,7 @@ export default function AnalyticsReport({ data }: AnalyticsReportProps) {
                 tickFormatter={(val) => `₹${val / 1000}k`}
               />
               <Tooltip
-                formatter={(value: number) => [formatCurrency(value), "Cumulative Spend"]}
+                formatter={(value: any) => [formatCurrency(Number(value || 0)), "Cumulative Spend"]}
                 contentStyle={{
                   backgroundColor: "var(--card)",
                   borderColor: "var(--border)",

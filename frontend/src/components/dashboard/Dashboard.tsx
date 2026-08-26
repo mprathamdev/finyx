@@ -57,7 +57,7 @@ export function DashboardCharts() {
                 <YAxis stroke="#64748B" fontSize={11} tickLine={false} />
                 <Tooltip
                   contentStyle={{ backgroundColor: "#FFFFFF", borderRadius: "8px", border: "1px solid #E2E8F0", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}
-                  formatter={(val: number) => [`$${val.toLocaleString()}`, "Expense"]}
+                  formatter={(val: any) => [`$${Number(val || 0).toLocaleString()}`, "Expense"]}
                 />
                 <Area type="monotone" dataKey="expense" stroke="#0B63F6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorExpense)" />
               </AreaChart>
