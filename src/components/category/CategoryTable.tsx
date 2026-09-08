@@ -1,21 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Edit3, Trash2, Check, X, Search, Tag } from "lucide-react";
+import { Edit3, Trash2, Search, Tag, Loader2 } from "lucide-react";
 
 export interface Category {
   id: string;
   name: string;
-  count?: number;
+  created_at?: string;
 }
 
 interface CategoryTableProps {
   categories: Category[];
-  onEditCategory: (id: string, newName: string) => void;
-  onDeleteCategory: (id: string) => void;
+  onStartEdit: (category: Category) => void;
+  onDeleteCategory: (id: string) => Promise<void>;
 }
 
-// Accent palette for category badges
 const BADGE_STYLES = [
   "bg-blue-500/10 text-blue-600 border-blue-500/20",
   "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
@@ -27,32 +26,27 @@ const BADGE_STYLES = [
 
 export function CategoryTable({
   categories,
-  onEditCategory,
+  onStartEdit,
   onDeleteCategory,
 }: CategoryTableProps) {
   const [search, setSearch] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filteredCategories = categories.filter((cat) =>
     cat.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const startEdit = (category: Category) => {
-    setEditingId(category.id);
-    setEditValue(category.name);
-  };
-
-  const saveEdit = (id: string) => {
-    if (editValue.trim()) {
-      onEditCategory(id, editValue.trim());
+  const handleDelete = async (id: string) => {
+    try {
+      setDeletingId(id);
+      await onDeleteCategory(id);
+    } finally {
+      setDeletingId(null);
     }
-    setEditingId(null);
   };
 
   return (
     <div className="bg-card border border-border/80 rounded-2xl p-4 sm:p-6 shadow-fin-card space-y-5">
-      {/* Header bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4">
         <div className="flex items-center gap-2.5">
           <div className="p-2 bg-secondary rounded-lg border border-border">
@@ -66,7 +60,6 @@ export function CategoryTable({
           </div>
         </div>
 
-        {/* Search */}
         <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -79,7 +72,6 @@ export function CategoryTable({
         </div>
       </div>
 
-      {/* Responsive Table Container */}
       <div className="w-full overflow-x-auto rounded-xl border border-border/60 shadow-fin-sm">
         <table className="w-full min-w-[540px] text-left text-xs border-collapse">
           <thead>
@@ -94,12 +86,14 @@ export function CategoryTable({
             {filteredCategories.length === 0 ? (
               <tr>
                 <td colSpan={4} className="py-12 text-center text-muted-foreground">
-                  No categories found matching your search.
+                  No categories found in Supabase database.
                 </td>
               </tr>
             ) : (
               filteredCategories.map((category, index) => {
                 const badgeStyle = BADGE_STYLES[index % BADGE_STYLES.length];
+                const isDeleting = deletingId === category.id;
+
                 return (
                   <tr
                     key={category.id}
@@ -110,24 +104,16 @@ export function CategoryTable({
                     </td>
 
                     <td className="py-3.5 px-4">
-                      {editingId === category.id ? (
-                        <input
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="px-3 py-1.5 text-xs font-semibold bg-background border border-[#0B63F6] rounded-lg text-foreground focus:outline-none ring-2 ring-[#0B63F6]/20 w-full max-w-xs"
-                          autoFocus
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2.5">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border shrink-0 ${badgeStyle}`}>
-                            {category.name.slice(0, 3).toUpperCase()}
-                          </span>
-                          <span className="font-bold text-foreground text-sm tracking-tight truncate">
-                            {category.name}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold border shrink-0 ${badgeStyle}`}
+                        >
+                          {category.name.slice(0, 3).toUpperCase()}
+                        </span>
+                        <span className="font-bold text-foreground text-sm tracking-tight truncate">
+                          {category.name}
+                        </span>
+                      </div>
                     </td>
 
                     <td className="py-3.5 px-4 text-center">
@@ -138,32 +124,23 @@ export function CategoryTable({
                     </td>
 
                     <td className="py-3.5 px-4 text-right">
-                      {editingId === category.id ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => saveEdit(category.id)}
-                            className="p-1.5 text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-colors"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="p-1.5 text-muted-foreground hover:bg-secondary rounded-lg transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                      {isDeleting ? (
+                        <div className="flex justify-end">
+                          <Loader2 className="w-4 h-4 text-[#0B63F6] animate-spin" />
                         </div>
                       ) : (
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => startEdit(category)}
+                            onClick={() => onStartEdit(category)}
                             className="p-1.5 text-muted-foreground hover:text-[#0B63F6] hover:bg-[#0B63F6]/10 rounded-lg transition-colors"
+                            title="Edit Category"
                           >
                             <Edit3 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => onDeleteCategory(category.id)}
+                            onClick={() => handleDelete(category.id)}
                             className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            title="Delete Category"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

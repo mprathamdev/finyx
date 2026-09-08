@@ -1,66 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { categoryService } from "@/services/category.service";
 import { CategoryForm } from "./CategoryForm";
 import { CategoryTable, Category } from "./CategoryTable";
-import { Layers } from "lucide-react";
-
-const initialCategories: Category[] = [
-  { id: "1", name: "Grocery" },
-  { id: "2", name: "Transportation" },
-  { id: "3", name: "Rent & Housing" },
-  { id: "4", name: "Utilities & Bills" },
-  { id: "5", name: "Shopping & Retail" },
-  { id: "6", name: "Entertainment" },
-  { id: "7", name: "Healthcare" },
-];
+import { Loader2, AlertCircle } from "lucide-react";
 
 export function CategoryContainer() {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAddCategory = (name: string) => {
-    const newCategory: Category = {
-      id: Date.now().toString(),
-      name,
-    };
-    setCategories((prev) => [newCategory, ...prev]);
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await categoryService.getUserCategories();
+      setCategories(data || []);
+    } catch (err: any) {
+      setError(err.message || "Failed to load categories.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEditCategory = (id: string, newName: string) => {
-    setCategories((prev) =>
-      prev.map((cat) => (cat.id === id ? { ...cat, name: newName } : cat))
-    );
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const handleSaveCategory = async (name: string, id?: string) => {
+    if (id) {
+      await categoryService.updateCategory(id, { name });
+    } else {
+      await categoryService.createCategory({ name, type: "expense" });
+    }
+    setEditingCategory(null);
+    await fetchCategories();
   };
 
-  const handleDeleteCategory = (id: string) => {
-    setCategories((prev) => prev.filter((cat) => cat.id !== id));
+  const handleDeleteCategory = async (id: string) => {
+    await categoryService.deleteCategory(id);
+    if (editingCategory?.id === id) {
+      setEditingCategory(null);
+    }
+    await fetchCategories();
   };
 
   return (
-    <div className="space-y-6 max-w-[1200px] mx-auto pb-10">
-      {/* Top Banner Header */}
-      <div className="flex items-center justify-between border-b border-border/60 pb-5">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#0B63F6]/10 text-[#0B63F6] border border-[#0B63F6]/20 uppercase">
-              System Settings
-            </span>
-          </div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground">
-            Category Management
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Configure analytical groups to automate income & expense classification.
-          </p>
-        </div>
+    <div className="space-y-6 max-w-7xl mx-auto p-4 sm:p-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Category Management
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Create and organize transaction categories tied directly to your profile.
+        </p>
       </div>
 
-      <CategoryForm onAddCategory={handleAddCategory} />
-      <CategoryTable
-        categories={categories}
-        onEditCategory={handleEditCategory}
-        onDeleteCategory={handleDeleteCategory}
+      <CategoryForm
+        onSaveCategory={handleSaveCategory}
+        editingCategory={editingCategory}
+        onCancelEdit={() => setEditingCategory(null)}
       />
+
+      {error && (
+        <div className="flex items-center gap-2 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs font-medium">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center p-12 bg-card border border-border/80 rounded-2xl">
+          <Loader2 className="w-6 h-6 text-[#0B63F6] animate-spin" />
+        </div>
+      ) : (
+        <CategoryTable
+          categories={categories}
+          onStartEdit={(category) => setEditingCategory(category)}
+          onDeleteCategory={handleDeleteCategory}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, BarChart3, Edit3, Trash2, Check, X, Search } from "lucide-react";
+import { FileText, BarChart3, Edit3, Trash2, Check, X, Search, Loader2 } from "lucide-react";
 
 export interface StatementItem {
   id: string;
@@ -16,6 +16,7 @@ interface StatementTableProps {
   onDeleteStatement: (id: string) => void;
   onEditStatement: (id: string, newFileName: string) => void;
   onViewAnalytics: (statement: StatementItem) => void;
+  analyzingId?: string | null;
 }
 
 export function StatementTable({
@@ -23,6 +24,7 @@ export function StatementTable({
   onDeleteStatement,
   onEditStatement,
   onViewAnalytics,
+  analyzingId,
 }: StatementTableProps) {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -129,10 +131,20 @@ export function StatementTable({
                     <td className="py-3.5 px-4 text-center">
                       <button
                         onClick={() => onViewAnalytics(statement)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#0B63F6]/10 text-[#0B63F6] hover:bg-[#0B63F6] hover:text-white border border-[#0B63F6]/20 transition-all duration-200 cursor-pointer shadow-fin-sm"
+                        disabled={analyzingId === statement.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#0B63F6]/10 text-[#0B63F6] hover:bg-[#0B63F6] hover:text-white border border-[#0B63F6]/20 transition-all duration-200 cursor-pointer shadow-fin-sm disabled:opacity-50"
                       >
-                        <BarChart3 className="w-3.5 h-3.5" />
-                        View Analytics
+                        {analyzingId === statement.id ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <BarChart3 className="w-3.5 h-3.5" />
+                            View Analytics
+                          </>
+                        )}
                       </button>
                     </td>
 

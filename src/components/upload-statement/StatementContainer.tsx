@@ -1,42 +1,112 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { StatementUploadForm } from "./StatementUploadForm";
 import { StatementTable, StatementItem } from "./StatementTable";
-
-const INITIAL_STATEMENTS: StatementItem[] = [
-  { id: "1", fileName: "HDFC_Bank_Statement_July_2026.pdf", fileSize: "2.4 MB", uploadDate: "2026-08-01", status: "Processed" },
-  { id: "2", fileName: "Chase_Checking_Account_Q2.pdf", fileSize: "1.8 MB", uploadDate: "2026-07-15", status: "Processed" },
-  { id: "3", fileName: "ICICI_CreditCard_Statement_June.pdf", fileSize: "840 KB", uploadDate: "2026-07-02", status: "Processed" },
-];
+import { statementService, StatementRecord } from "@/services/statement.service";
+import { createClient } from "@/lib/supabase/client";
+import { Loader2, AlertCircle } from "lucide-react";
 
 export function StatementContainer() {
-  const [statements, setStatements] = useState<StatementItem[]>(INITIAL_STATEMENTS);
+  const router = useRouter();
+  const [statements, setStatements] = useState<StatementItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
 
-  const handleUploadSuccess = (file: File) => {
-    const newStatement: StatementItem = {
-      id: Date.now().toString(),
-      fileName: file.name,
-      fileSize: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-      uploadDate: new Date().toISOString().split("T")[0],
-      status: "Processed",
-    };
-    setStatements((prev) => [newStatement, ...prev]);
+  const fetchStatements = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data: StatementRecord[] = await statementService.getUserStatements();
+      const formatted: StatementItem[] = data.map((item) => ({
+        id: item.id,
+        fileName: item.original_file_name,
+        fileSize: "PDF Document",
+        uploadDate: new Date(item.created_at).toISOString().split("T")[0],
+        status: (item.status.charAt(0).toUpperCase() + item.status.slice(1)) as
+          | "Processed"
+          | "Processing"
+          | "Failed",
+      }));
+
+      setStatements(formatted);
+    } catch (err: any) {
+      setError(err.message || "Failed to load statement history.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteStatement = (id: string) => {
-    setStatements((prev) => prev.filter((item) => item.id !== id));
+  useEffect(() => {
+    fetchStatements();
+  }, []);
+
+  const handleUploadSuccess = async (file: File) => {
+    try {
+      await statementService.uploadStatement(file);
+      await fetchStatements();
+    } catch (err: any) {
+      alert(err.message || "Error processing statement upload.");
+    }
   };
 
-  const handleEditStatement = (id: string, newFileName: string) => {
-    setStatements((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, fileName: newFileName } : item))
-    );
+  const handleDeleteStatement = async (id: string) => {
+    try {
+      await statementService.deleteStatement(id);
+      await fetchStatements();
+    } catch (err: any) {
+      alert(err.message || "Error deleting statement.");
+    }
   };
 
-  const handleViewAnalytics = (statement: StatementItem) => {
-    // Integration point: Route to analytics page or open modal
-    console.log("Navigating to analytics for statement:", statement.fileName);
+  const handleEditStatement = async (id: string, newFileName: string) => {
+    try {
+      await statementService.updateStatementName(id, newFileName);
+      await fetchStatements();
+    } catch (err: any) {
+      alert(err.message || "Error renaming statement.");
+    }
+  };
+
+  const handleViewAnalytics = async (statement: StatementItem) => {
+    try {
+      setAnalyzingId(statement.id);
+
+      // Get user's session access token to attach as Bearer header
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+
+      const res = await fetch("/api/statements/analyze", {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: JSON.stringify({ statementId: statement.id }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to process analytics.");
+      }
+
+      router.push(`/analytics?statementId=${statement.id}`);
+    } catch (err: any) {
+      alert(err.message || "Error analyzing bank statement.");
+      fetchStatements();
+    } finally {
+      setAnalyzingId(null);
+    }
   };
 
   return (
@@ -57,13 +127,28 @@ export function StatementContainer() {
         </div>
       </div>
 
+      {error && (
+        <div className="flex items-center gap-2 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs font-medium">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
       <StatementUploadForm onUploadSuccess={handleUploadSuccess} />
-      <StatementTable
-        statements={statements}
-        onDeleteStatement={handleDeleteStatement}
-        onEditStatement={handleEditStatement}
-        onViewAnalytics={handleViewAnalytics}
-      />
+
+      {loading ? (
+        <div className="flex items-center justify-center p-12 bg-card border border-border/80 rounded-2xl">
+          <Loader2 className="w-6 h-6 text-[#0B63F6] animate-spin" />
+        </div>
+      ) : (
+        <StatementTable
+          statements={statements}
+          onDeleteStatement={handleDeleteStatement}
+          onEditStatement={handleEditStatement}
+          onViewAnalytics={handleViewAnalytics}
+          analyzingId={analyzingId}
+        />
+      )}
     </div>
   );
 }

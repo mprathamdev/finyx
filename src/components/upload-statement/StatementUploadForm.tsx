@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { UploadCloud, FileText, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { UploadCloud, FileText, CheckCircle2, AlertCircle, Sparkles, Loader2 } from "lucide-react";
 
 interface StatementUploadFormProps {
-  onUploadSuccess: (file: File) => void;
+  onUploadSuccess: (file: File) => Promise<void>;
 }
 
 export function StatementUploadForm({ onUploadSuccess }: StatementUploadFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,13 +49,20 @@ export function StatementUploadForm({ onUploadSuccess }: StatementUploadFormProp
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) return;
+    if (!selectedFile || uploading) return;
 
-    onUploadSuccess(selectedFile);
-    setSelectedFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    try {
+      setUploading(true);
+      await onUploadSuccess(selectedFile);
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (err: any) {
+      setError(err.message || "Error submitting file.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -77,20 +85,19 @@ export function StatementUploadForm({ onUploadSuccess }: StatementUploadFormProp
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Dropzone */}
         <div
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => !uploading && fileInputRef.current?.click()}
           className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-3 ${
             dragActive
               ? "border-[#0B63F6] bg-[#0B63F6]/5"
               : selectedFile
               ? "border-emerald-500/50 bg-emerald-500/5"
               : "border-border/80 bg-background/50 hover:bg-secondary/50 hover:border-border"
-          }`}
+          } ${uploading ? "opacity-60 pointer-events-none" : ""}`}
         >
           <input
             ref={fileInputRef}
@@ -137,14 +144,23 @@ export function StatementUploadForm({ onUploadSuccess }: StatementUploadFormProp
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={!selectedFile}
+            disabled={!selectedFile || uploading}
             className="inline-flex items-center justify-center gap-2 h-10 px-6 text-xs font-bold text-white bg-finyx-accent-gradient hover:opacity-95 active:scale-95 disabled:opacity-50 disabled:pointer-events-none rounded-xl shadow-fin-md transition-all duration-200 cursor-pointer"
           >
-            <UploadCloud className="w-4 h-4" />
-            Process Statement
+            {uploading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <UploadCloud className="w-4 h-4" />
+                Process Statement
+              </>
+            )}
           </button>
         </div>
       </form>
     </div>
   );
-}
+} 

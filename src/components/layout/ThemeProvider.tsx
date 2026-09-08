@@ -6,7 +6,14 @@ import { type ThemeProviderProps } from "next-themes";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return (
-    <NextThemesProvider {...props}>
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+      {...props}
+      scriptProps={{ id: "next-themes-script" }}
+    >
       {children}
     </NextThemesProvider>
   );

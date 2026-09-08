@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Edit3, Trash2, Check, X, Search, Receipt, ArrowUpDown } from "lucide-react";
+import { Edit3, Trash2, Search, Receipt } from "lucide-react";
 
 export interface ExpenseItem {
   id: string;
@@ -15,14 +15,12 @@ export interface ExpenseItem {
 interface ExpenseTableProps {
   expenses: ExpenseItem[];
   onDeleteExpense: (id: string) => void;
-  onEditExpense: (id: string, updated: Partial<ExpenseItem>) => void;
+  onStartEdit: (expense: ExpenseItem) => void;
 }
 
-export function ExpenseTable({ expenses, onDeleteExpense, onEditExpense }: ExpenseTableProps) {
+export function ExpenseTable({ expenses, onDeleteExpense, onStartEdit }: ExpenseTableProps) {
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("ALL");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<ExpenseItem>>({});
 
   const categories = Array.from(new Set(expenses.map((e) => e.category)));
 
@@ -35,18 +33,6 @@ export function ExpenseTable({ expenses, onDeleteExpense, onEditExpense }: Expen
   });
 
   const totalFiltered = filteredExpenses.reduce((sum, item) => sum + item.amount, 0);
-
-  const startEdit = (expense: ExpenseItem) => {
-    setEditingId(expense.id);
-    setEditForm(expense);
-  };
-
-  const saveEdit = (id: string) => {
-    if (editForm.description && editForm.amount) {
-      onEditExpense(id, editForm);
-    }
-    setEditingId(null);
-  };
 
   return (
     <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-fin-card space-y-5">
@@ -61,7 +47,7 @@ export function ExpenseTable({ expenses, onDeleteExpense, onEditExpense }: Expen
             <p className="text-xs text-muted-foreground">
               Showing {filteredExpenses.length} transactions — Total:{" "}
               <span className="font-bold text-foreground font-numeric">
-                ${totalFiltered.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                Rs. {totalFiltered.toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </span>
             </p>
           </div>
@@ -124,94 +110,45 @@ export function ExpenseTable({ expenses, onDeleteExpense, onEditExpense }: Expen
                       {String(index + 1).padStart(2, "0")}
                     </td>
 
-                    {/* Date */}
                     <td className="py-3.5 px-4 font-medium text-muted-foreground whitespace-nowrap">
-                      {editingId === expense.id ? (
-                        <input
-                          type="date"
-                          value={editForm.date || ""}
-                          onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
-                          className="px-2 py-1 text-xs bg-background border border-input rounded text-foreground"
-                        />
-                      ) : (
-                        expense.date
-                      )}
+                      {expense.date}
                     </td>
 
-                    {/* Description */}
                     <td className="py-3.5 px-4 font-bold text-foreground">
-                      {editingId === expense.id ? (
-                        <input
-                          type="text"
-                          value={editForm.description || ""}
-                          onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                          className="px-2 py-1 text-xs bg-background border border-input rounded text-foreground w-full"
-                        />
-                      ) : (
-                        expense.description
-                      )}
+                      {expense.description}
                     </td>
 
-                    {/* Category */}
                     <td className="py-3.5 px-4">
                       <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#0B63F6]/10 text-[#0B63F6] border border-[#0B63F6]/20">
                         {expense.category}
                       </span>
                     </td>
 
-                    {/* Payment Mode */}
                     <td className="py-3.5 px-4 text-muted-foreground font-medium">
                       {expense.paymentMode}
                     </td>
 
-                    {/* Amount */}
                     <td className="py-3.5 px-4 text-right font-numeric font-bold text-foreground text-sm">
-                      {editingId === expense.id ? (
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={editForm.amount || ""}
-                          onChange={(e) => setEditForm({ ...editForm, amount: parseFloat(e.target.value) })}
-                          className="px-2 py-1 text-xs bg-background border border-input rounded text-foreground w-24 text-right"
-                        />
-                      ) : (
-                        `$${expense.amount.toFixed(2)}`
-                      )}
+                      Rs. {expense.amount.toFixed(2)}
                     </td>
 
-                    {/* Actions */}
                     <td className="py-3.5 px-4 text-right">
-                      {editingId === expense.id ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => saveEdit(expense.id)}
-                            className="p-1.5 text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-colors"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="p-1.5 text-muted-foreground hover:bg-secondary rounded-lg transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-end gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => startEdit(expense)}
-                            className="p-1.5 text-muted-foreground hover:text-[#0B63F6] hover:bg-[#0B63F6]/10 rounded-lg transition-colors"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => onDeleteExpense(expense.id)}
-                            className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex items-center justify-end gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => onStartEdit(expense)}
+                          className="p-1.5 text-muted-foreground hover:text-[#0B63F6] hover:bg-[#0B63F6]/10 rounded-lg transition-colors cursor-pointer"
+                          title="Edit Expense"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => onDeleteExpense(expense.id)}
+                          className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                          title="Delete Expense"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
